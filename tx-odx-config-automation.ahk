@@ -44,7 +44,7 @@ if A_Args.Length > 0 {
     TxOdxInstanceName := EnvGet("TxOdxInstanceName")
 }
 
-#Include tx-lib.ahk
+#Include Lib\TxLib.ahk
 #Include Lib\UIA.ahk
 
 ;
