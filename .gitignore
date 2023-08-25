@@ -1,0 +1,5 @@
+UIA-v2-main/
+*.exe
+*.zip
+*.log
+SetEnv.ps1
