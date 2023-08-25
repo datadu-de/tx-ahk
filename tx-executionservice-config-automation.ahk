@@ -32,20 +32,48 @@ SetControlDelay 100
 
 exe_name := "TimeXtender.Job.Execution.Configuration.exe"
 win_title := "Execution Server Configuration"
-
-
-if A_Args.Length > 0 {
-    TxUserName := A_Args[1]
-    TxPassword := A_Args[2]
-    TxExecutionServerInstanceNames := StrSplit(A_Args[3], ",")
-} else {
-    TxUserName := EnvGet("TxUserName")
-    TxPassword := EnvGet("TxPassword")
-    TxExecutionServerInstanceNames := StrSplit(EnvGet("TxExecutionServerInstanceNames"), ",")
-}
+cred_name := "https://timextender-saas.eu.auth0.com"
 
 #Include Lib\TxLib.ahk
 #Include Lib\UIA.ahk
+#Include Lib\CredMgr.ahk
+
+TxUserName := ""
+TxPassword := ""
+
+if A_Args.Length > 1 {
+    TxUserName := A_Args[2]
+    TxPassword := A_Args[3]
+
+} else if (cred := CredRead(cred_name)) {
+    TxUserName := cred.username
+    TxPassword := cred.password
+
+} else {
+    TxUserName := EnvGet("TxUserName")
+    TxPassword := EnvGet("TxPassword")
+}
+
+if TxUserName == "" {
+    TxUserName := InputBox("TimeXtender Portal user name")
+}
+
+if TxPassword == "" {
+    TxPassword := InputBox("TimeXtender Portal password", , "Password*")
+}
+
+
+if A_Args.Length > 0 {
+    TxExecutionServerInstanceNames := StrSplit(A_Args[1], ",")
+
+} else if TxExecutionServerInstanceNames := EnvGet("TxExecutionServerInstanceNames") {
+    TxExecutionServerInstanceNames := StrSplit(TxExecutionServerInstanceNames, ",")
+
+} else {
+    TxExecutionServerInstanceNames := ["MDW Local"]
+
+}
+
 
 ;
 ; SCRIPT STARTS HERE
