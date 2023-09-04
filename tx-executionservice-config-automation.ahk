@@ -30,6 +30,8 @@ SetTitleMatchMode "Slow"
 SetWinDelay 1000
 SetControlDelay 100
 
+create_log := false
+
 exe_name := "TimeXtender.Job.Execution.Configuration.exe"
 win_title := "Execution Server Configuration"
 cred_name := "https://timextender-saas.eu.auth0.com"
@@ -55,22 +57,23 @@ if A_Args.Length > 1 {
 }
 
 if TxUserName == "" {
-    TxUserName := InputBox("TimeXtender Portal user name")
+    TxUserName := InputBox("TimeXtender Portal user name").Value
 }
 
 if TxPassword == "" {
-    TxPassword := InputBox("TimeXtender Portal password", , "Password*")
+    TxPassword := InputBox("TimeXtender Portal password", , "Password*").Value
 }
 
 
 if A_Args.Length > 0 {
-    TxExecutionServerInstanceNames := StrSplit(A_Args[1], ",")
+    TxExecutionServerInstanceNames := StrSplit(A_Args[1], ",", " `t")
 
 } else if TxExecutionServerInstanceNames := EnvGet("TxExecutionServerInstanceNames") {
     TxExecutionServerInstanceNames := StrSplit(TxExecutionServerInstanceNames, ",")
 
 } else {
-    TxExecutionServerInstanceNames := ["MDW Local"]
+    TxExecutionServerInstanceNames := StrSplit(InputBox("TimeXtender instance names, separated by comma (',')").Value, ",", " `t")
+    ;["MDW Local"]
 
 }
 
@@ -101,9 +104,38 @@ if WinWaitActive(win_title, "Sign in", 5) {
 
 if WinWaitActive("Sign In", , 5) {
     LogMsg("Sign in")
-    ; TODO: implement logging in
 
-    WinWaitClose "Sign In", , 5
+    WinWaitActive("Sign In", , 5)
+    if (!WinWaitClose("Sign In", , 5)) {
+        ; window still exists
+
+        Sleep 5000
+
+        rootEl := UIA.ElementFromHandle("Sign In")
+
+        el := rootEl.WaitElement({ Name: "Email", Type: "Edit" }, 10)
+
+        el.SetFocus()
+        el.ControlClick()
+        el.value := ""
+        Sleep 100
+        Send "{Text}" . TxUserName
+        Sleep 1000
+
+        el := rootEl.FindElement({ Name: "Password", Type: "Edit" })
+
+        el.SetFocus()
+        el.ControlClick()
+        el.value := ""
+        Sleep 100
+        Send "{Raw}" . TxPassword
+        Sleep 100
+
+        Sleep 100
+        rootEl.FindElement({ Name: "Sign in", Type: "Button" }).ControlClick()
+
+        WinWaitClose "Sign In", , 5
+    }
 }
 
 WinActivate win_title

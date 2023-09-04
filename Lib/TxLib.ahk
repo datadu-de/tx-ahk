@@ -15,7 +15,11 @@ if FileExist(LogFileName) {
     FileDelete LogFileName
 }
 LogMsg(msg, LogFileName := A_ScriptName . ".log") {
-    FileAppend FormatTime(, "yyyy-MM-dd HH:mm:ss") . " - " . msg . "`r`n", LogFileName
+    global create_log
+    if (create_log)
+    {
+        FileAppend FormatTime(, "yyyy-MM-dd HH:mm:ss") . " - " . msg . "`r`n", LogFileName
+    }
 }
 
 StrJoin(arr, concat := ", ") {

@@ -30,44 +30,51 @@ SetTitleMatchMode "Slow"
 SetWinDelay 1000
 SetControlDelay 100
 
+create_log := false
+
 exe_name := "ODXServerConfiguration.exe"
 win_title := "ODX Server Configuration"
 cred_name := "https://timextender-saas.eu.auth0.com"
 
 #Include Lib\TxLib.ahk
 #Include Lib\UIA.ahk
+;#include Lib\UIA_Browser.ahk
 #Include Lib\CredMgr.ahk
 
 TxUserName := ""
 TxPassword := ""
 
+; first, try to read credentials from command line arguments
 if A_Args.Length > 1 {
     TxUserName := A_Args[2]
     TxPassword := A_Args[3]
 
+    ; secondly, try to read from windows credential store
 } else if (cred := CredRead(cred_name)) {
     TxUserName := cred.username
     TxPassword := cred.password
 
+    ; then, get them from environment variables
 } else {
     TxUserName := EnvGet("TxUserName")
     TxPassword := EnvGet("TxPassword")
 }
 
+; lastly, prompt the user for credentials
 if TxUserName == "" {
-    TxUserName := InputBox("TimeXtender Portal user name")
+    TxUserName := InputBox("TimeXtender Portal user name").Value
 }
 
 if TxPassword == "" {
-    TxPassword := InputBox("TimeXtender Portal password", , "Password*")
+    TxPassword := InputBox("TimeXtender Portal password", , "Password*").Value
 }
 
 
 if A_Args.Length > 0 {
-    TxOdxInstanceName := StrSplit(A_Args[1], ",")
+    TxOdxInstanceName := A_Args[1]
 
 } else if not (TxOdxInstanceName := EnvGet("TxOdxInstanceName")) {
-    TxOdxInstanceName := "ODX Local"
+    TxOdxInstanceName := InputBox("TimeXtender ODX instance name").Value
 
 }
 
@@ -100,9 +107,38 @@ if WinWaitActive(win_title, "Sign In", 5) {
 
 if WinWaitActive("Sign In", , 5) {
     LogMsg("Sign in")
-    ; TODO: implement logging in
 
-    WinWaitClose "Sign In", , 5
+    WinWaitActive("Sign In", , 5)
+    if (!WinWaitClose("Sign In", , 5)) {
+        ; window still exists
+
+        Sleep 5000
+
+        rootEl := UIA.ElementFromHandle("Sign In")
+
+        el := rootEl.WaitElement({ Name: "Email", Type: "Edit" }, 10)
+
+        el.SetFocus()
+        el.ControlClick()
+        el.value := ""
+        Sleep 100
+        Send "{Text}" . TxUserName
+        Sleep 1000
+
+        el := rootEl.FindElement({ Name: "Password", Type: "Edit" })
+
+        el.SetFocus()
+        el.ControlClick()
+        el.value := ""
+        Sleep 100
+        Send "{Raw}" . TxPassword
+        Sleep 100
+
+        Sleep 100
+        rootEl.FindElement({ Name: "Sign in", Type: "Button" }).ControlClick()
+
+        WinWaitClose "Sign In", , 5
+    }
 }
 
 WinActivate win_title
