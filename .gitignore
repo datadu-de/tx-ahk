@@ -3,3 +3,4 @@ UIA-v2-main/
 *.zip
 *.log
 SetEnv.ps1
+.DS_Store

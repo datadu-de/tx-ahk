@@ -13,9 +13,9 @@ if not (A_IsAdmin or RegExMatch(full_command_line, " /restart(?!\S)"))
     try
     {
         if A_IsCompiled
-            Run '*RunAs "' A_ScriptFullPath '" /restart'
+            Run '*RunAs "' A_ScriptFullPath '" /restart' . StrJoin(A_Args, " ", '"', '"', " ")
         else
-            Run '*RunAs "' A_AhkPath '" /restart "' A_ScriptFullPath '"'
+            Run '*RunAs "' A_AhkPath '" /restart "' A_ScriptFullPath '"' . StrJoin(A_Args, " ", '"', '"', " ")
     }
     ExitApp
 }
@@ -79,6 +79,10 @@ if A_Args.Length > 0 {
 }
 
 
+if (TxUserName == "" or TxPassword == "" or TxOdxInstanceName == "") {
+    ExitApp
+}
+
 ;
 ; SCRIPT STARTS HERE
 ;
@@ -105,11 +109,11 @@ if WinWaitActive(win_title, "Sign In", 5) {
     ControlClick "Sign In"
 }
 
-if WinWaitActive("Sign In", , 5) {
+if WinWaitActive("Sign In", , 10) {
     LogMsg("Sign in")
 
-    WinWaitActive("Sign In", , 5)
-    if (!WinWaitClose("Sign In", , 5)) {
+    WinWaitActive("Sign In", , 10)
+    if (!WinWaitClose("Sign In", , 10)) {
         ; window still exists
 
         Sleep 5000

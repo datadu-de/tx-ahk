@@ -22,12 +22,12 @@ LogMsg(msg, LogFileName := A_ScriptName . ".log") {
     }
 }
 
-StrJoin(arr, concat := ", ") {
+StrJoin(arr, concat := ", ", beforeEach := "", afterEach := "", before := "", after := "") {
     value := ""
     Loop arr.Length {
-        value .= (A_Index > 1 ? concat : "") . arr[A_Index]
+        value .= (A_Index > 1 ? concat : "") . beforeEach . arr[A_Index] . afterEach
     }
-    return value
+    return (StrLen(value) == 0 ? value : before . value . after)
 }
 
 InArray(arr, search) {
